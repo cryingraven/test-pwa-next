@@ -36,8 +36,14 @@ export default function App({ Component, pageProps }: AppProps) {
     const firebaseApp = initializeApp(firebaseConfig)
     const messaging = getMessaging(firebaseApp)
   
-    const fcmToken = await getToken(messaging)
-    console.log(fcmToken)
+    let token = localStorage.getItem("fcm-token")
+    if(!token){
+      token = await getToken(messaging)
+
+      localStorage.setItem('fcm-token', token)
+    }
+
+    console.log(token)
   }
 
   const requestNotificationPermission = async ()=>{
