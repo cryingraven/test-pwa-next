@@ -8,14 +8,14 @@ export default function App({ Component, pageProps }: AppProps) {
   const registerSW = async () => {
     if("serviceWorker" in navigator) {
       try{
-        const status = await requestNotificationPermission()
-        const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js")
+        const registration = await navigator.serviceWorker.getRegistration("/")
+        const status = await Notification.requestPermission();
         if(status!="granted"){
           return
         }
-        if(registration.active)[
-          getFCMToken()
-        ]
+        if(registration && registration.active){
+          getFCMToken(registration)
+        }
       }catch(e){
         console.log("Error Register Worker")
       }
@@ -24,7 +24,7 @@ export default function App({ Component, pageProps }: AppProps) {
     }
   }
 
-  const getFCMToken  = async ()=>{
+  const getFCMToken  = async (registerSW: ServiceWorkerRegistration)=>{
     const firebaseConfig = {
       apiKey: "AIzaSyCitUfAKBYTI-CLny1rb9IwPN2UAf4tW6E",
       authDomain: "test-pwa-8e1a0.firebaseapp.com",
@@ -36,18 +36,10 @@ export default function App({ Component, pageProps }: AppProps) {
     const firebaseApp = initializeApp(firebaseConfig)
     const messaging = getMessaging(firebaseApp)
   
-    let token = localStorage.getItem("fcm-token")
-    if(!token){
-      token = await getToken(messaging)
-
-      localStorage.setItem('fcm-token', token)
-    }
-
+    let token
+    token = await getToken(messaging, { serviceWorkerRegistration: registerSW})
+    localStorage.setItem('fcm-token', token)
     console.log(token)
-  }
-
-  const requestNotificationPermission = async ()=>{
-    return await Notification.requestPermission();
   }
 
   useEffect(() => {
